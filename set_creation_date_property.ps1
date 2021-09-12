@@ -34,10 +34,14 @@ function extract_dates_from_filename{
 
     $extracted_files = @()
     $extracted_dates = @()
-    foreach ($file in $files) {
+    foreach ($item in $files) {
 
-        # match date format YYYYMMDD
+        # get file path
+        $file = $item.FullName
+
+        # match date format YYYYMMDD in file name
         $cond = $file -match "(\d\d\d\d)(\d\d)(\d\d)$fileExtension"
+
         if($cond) {
             $year = $Matches[1]
             $month = $Matches[2]
@@ -49,7 +53,7 @@ function extract_dates_from_filename{
             $extracted_files += $file
         }else {
             # skip not-matching files
-            Write-Output "Skipped file $file"
+            Write-Verbose "Skipped file $file"
         }
     }
 
@@ -79,17 +83,25 @@ function update_creation_date{
 }
 
 
-# init extension of interest
+# set extension from files of interest
 $extension = ".pdf"
+Write-Output("File extensions set: $extension")
 
 # list all extension-matching files
 $files = get_files $extension
+Write-Output("Files to update:")
+Write-Output($files)
 
-# extract casted date and file
-$dates, $filtered_files = extract_dates_from_filename $files $extension
+# extract casted date and file separately
+$extracted_dates = @()
+$filtered_files = @()
+$extracted_dates, $filtered_files = extract_dates_from_filename $files $extension
 
-# set extracted dates as CreationTime 
+Write-Output("Set new creation date.")
+# set extracted dates as new CreationTime 
 $length = $filtered_files.Length
 for($i=0; $i -lt $length; $i++) {
-    update_creation_date $filtered_files[$i] $dates[$i]
+    update_creation_date $filtered_files[$i] $extracted_dates[$i]
 }
+
+Write-Output("All files updated.")
